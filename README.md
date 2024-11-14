@@ -1,0 +1,1 @@
+# centreon-check_service_conf
