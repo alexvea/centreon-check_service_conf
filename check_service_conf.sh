@@ -1,3 +1,4 @@
+[root@ip-10-25-12-10 ~]# cat check_service.sh 
 #!/bin/bash
 
 verbose=0
@@ -5,6 +6,7 @@ exit_status=0
 files_checked=0
 files_modified=0
 nagios_output_flag=0
+verbose_output=""
 
 # Function to display the script help
 help_output()
@@ -22,7 +24,7 @@ help_output()
    echo "--folder               Specify the service confs folder path."
    echo "                       ie: --folder PATH_FOLDER"
    echo "--verbose              Display more informations."
-   echo "--nagios-output        Display the nagios output."
+   echo "--nagios               Display the nagios output."
    echo
    exit
 }
@@ -63,10 +65,10 @@ compare_time() {
 
   if [ "$file_mod_time" -gt "$service_restart_time" ]; then
     files_modified=$((files_modified+1))
-    [ "$verbose" -eq 1 ] && echo "$file was modified after the service restart (modified: $file_mod_time_human)"
+     verbose_output="${verbose_output}$file was modified after the service restart (modified: $file_mod_time_human)\n"
     exit_status=1
   else
-    [ "$verbose" -eq 1 ] && echo "$file is older than the service restart (modified: $file_mod_time_human)"
+     verbose_output="${verbose_output}$file is older than the service restart (modified: $file_mod_time_human)\n"
   fi
 }
 
@@ -97,7 +99,7 @@ while [[ "$#" -gt 0 ]]; do
     --service) service="$2"; shift ;;
     --file) file="$2"; shift ;;
     --folder) folder="$2"; shift ;;
-    --nagios-output) nagios_output_flag=1 ;;
+    --nagios) nagios_output_flag=1 ;;
     --verbose) verbose=1 ;;
     --help) help_output ;;
     *) echo "Unknown parameter passed: $1"; exit 1 ;;
@@ -135,7 +137,8 @@ if [ "$nagios_output_flag" -ne 1 ] && [ "$verbose" -ne 1 ]; then
   fi
 fi
 # Show the service restart time in verbose mode
-[ "$verbose" -eq 1 ] && echo "Service '$service' last restarted at: $service_restart_time_human"
+verbose_output="${verbose_output}Service "$service" last restarted at: $service_restart_time_human"
+[ "$verbose" -eq 1 ] && printf "%b\n" "$verbose_output"
 
 #Exit with the proper status
 exit $exit_status
