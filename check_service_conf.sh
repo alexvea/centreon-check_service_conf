@@ -6,6 +6,27 @@ files_checked=0
 files_modified=0
 nagios_output_flag=0
 
+# Function to display the script help
+help_output()
+{
+   # Display Help
+   echo "This script will help to check if a service needs to be restarted because conf files where modified"
+   echo "Syntax: --service SYSTEMCTL_SERVICE_NAME (--file PATH_FILE|--folder PATH_FOLDER) [--help|--nagios-output|--verbose]"
+   echo
+   echo "Options:"
+   echo "--help                 Print this help."
+   echo "--service              Specify a service managed by systemctl."
+   echo "                       ie: --service SYSTEMCTL_SERVICE_NAME"
+   echo "--file                 Specify the service conf file path."
+   echo "                       ie: --file PATH_FILE"
+   echo "--folder               Specify the service confs folder path."
+   echo "                       ie: --folder PATH_FOLDER"
+   echo "--verbose              Display more informations."
+   echo "--nagios-output        Display the nagios output."
+   echo
+   exit
+}
+
 # Function to check the last modification time of file(s)
 check_modification_time() {
   local path="$1"
@@ -42,10 +63,10 @@ compare_time() {
 
   if [ "$file_mod_time" -gt "$service_restart_time" ]; then
     files_modified=$((files_modified+1))
-    [ "$verbose" -eq 1 ] && echo "WARNING: $file was modified after the service restart (modified: $file_mod_time_human)"
+    [ "$verbose" -eq 1 ] && echo "$file was modified after the service restart (modified: $file_mod_time_human)"
     exit_status=1
   else
-    [ "$verbose" -eq 1 ] && echo "OK: $file is older than the service restart (modified: $file_mod_time_human)"
+    [ "$verbose" -eq 1 ] && echo "$file is older than the service restart (modified: $file_mod_time_human)"
   fi
 }
 
@@ -69,6 +90,7 @@ nagios_output() {
   esac
 }
 
+[[ "$#" -eq 0 ]] && help_output
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -77,6 +99,7 @@ while [[ "$#" -gt 0 ]]; do
     --folder) folder="$2"; shift ;;
     --nagios-output) nagios_output_flag=1 ;;
     --verbose) verbose=1 ;;
+    --help) help_output ;;
     *) echo "Unknown parameter passed: $1"; exit 1 ;;
   esac
   shift
@@ -98,10 +121,10 @@ else
   exit 1
 fi
 
-# Output for Nagios if requested
-if [ "$nagios_output_flag" -eq 1 ]; then
-  nagios_output "$exit_status"
-fi
+  # Output for Nagios if requested
+  if [ "$nagios_output_flag" -eq 1 ]; then
+    nagios_output "$exit_status"
+  fi
 
 # If not using --verbose or --nagios-output, provide a simple summary
 if [ "$nagios_output_flag" -ne 1 ] && [ "$verbose" -ne 1 ]; then
