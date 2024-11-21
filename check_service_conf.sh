@@ -136,3 +136,6 @@ if [ "$nagios_output_flag" -ne 1 ] && [ "$verbose" -ne 1 ]; then
 fi
 # Show the service restart time in verbose mode
 [ "$verbose" -eq 1 ] && echo "Service '$service' last restarted at: $service_restart_time_human"
+
+#Exit with the proper status
+exit $exit_status
